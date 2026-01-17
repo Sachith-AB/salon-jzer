@@ -1,16 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 import MainLayout from '../components/MainLayout';
 import Title from '../components/Title';
 import Button from '../components/Button';
-import { MdCheckCircle, MdError, MdUploadFile } from 'react-icons/md';
+import { MdUploadFile } from 'react-icons/md';
+import { supabase } from '../supabaseClient';
 
 export default function Admin() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ 
         type: null, 
         message: '' 
     });
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -23,25 +27,64 @@ export default function Admin() {
         }
     };
 
-    const handleUpload = () => {
+    const handleUpload = async () => {
         if (!selectedFile) {
             setUploadStatus({ type: 'error', message: 'No file selected' });
             return;
         }
-        setUploadStatus({ 
-            type: 'success', 
-            message: `Video "${selectedFile.name}" successfully uploaded!` 
-        });
-        toast.success('video uploaded');
-        setTimeout(() => {
-            setSelectedFile(null);
-            setUploadStatus({ type: null, message: '' });
-        }, 2000);
+
+        setIsUploading(true);
+        setUploadProgress(0);
+        
+        try {
+            // Simulate progress
+            const progressInterval = setInterval(() => {
+                setUploadProgress((prev) => Math.min(prev + 10, 90));
+            }, 200);
+
+            // Create a safe filename by removing special characters
+            const fileExtension = selectedFile.name.split('.').pop() || 'mp4';
+            const safeFileName = `${Date.now()}.${fileExtension}`;
+            
+            const { error } = await supabase.storage
+                .from('videos')
+                .upload(safeFileName, selectedFile);
+
+            clearInterval(progressInterval);
+            setUploadProgress(100);
+
+            if (error) {
+                throw error;
+            }
+
+            setUploadStatus({ 
+                type: 'success', 
+                message: `Video "${selectedFile.name}" successfully uploaded!` 
+            });
+            toast.success('video uploaded');
+            
+            setTimeout(() => {
+                setSelectedFile(null);
+                setUploadStatus({ type: null, message: '' });
+                setUploadProgress(0);
+            }, 2000);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+            setUploadStatus({ type: 'error', message: errorMessage });
+            toast.error(errorMessage);
+            console.error('Upload error:', error);
+        } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
+        }
     };
 
     const handleRemoveFile = () => {
         setSelectedFile(null);
         setUploadStatus({ type: null, message: '' });
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const formatFileSize = (bytes: number) => {
@@ -70,6 +113,7 @@ export default function Admin() {
                         <div className="mb-6 mt-4">
                             <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer mt-3">
                                 <input
+                                    ref={fileInputRef}
                                     type="file"
                                     accept="video/*"
                                     onChange={handleFileSelect}
@@ -88,23 +132,44 @@ export default function Admin() {
                                     </div>
                                 )}
                             </div>
-                            {selectedFile && (
-                                <div className="mt-4">
-                                    <Button
-                                        text="Remove File"
-                                        onClick={handleRemoveFile}
-                                        variant="danger"
-                                        size="sm"
-                                    />
+                            <div className='h-12 mt-4'>
+                                {selectedFile && !isUploading && (
+                                    <div className="">
+                                        <Button
+                                            text="Remove File"
+                                            onClick={handleRemoveFile}
+                                            variant="danger"
+                                            size="sm"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className='h-24'>
+                            {/* Upload Progress */}
+                            {isUploading && (
+                                <div className="mb-3 flex flex-col justify-center">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <Title text="Upload Progress" size="sm" color="primary" weight={500} />
+                                        <Title text={`${uploadProgress}%`} size="sm" color="primary" weight={600} />
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                        <div 
+                                            className="bg-primary h-full transition-all duration-300 ease-out"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        ></div>
+                                    </div>
                                 </div>
                             )}
                         </div>
+
                         {/* Upload Button */}
                         <div className="mt-6">
                             <Button
-                                text="Upload Video"
+                                text={isUploading ? "Uploading..." : "Upload Video"}
                                 onClick={handleUpload}
-                                disabled={!selectedFile}
+                                disabled={!selectedFile || isUploading}
                                 variant="primary"
                                 size="lg"
                                 className="w-full"
