@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 interface TitleProps {
     text: string
     size?: 'xs' | 'sm' | 'base' | 'large'| 'xl' | 'dxl' | 'txl' | 'fvxl' | 'fixl' | 'sxl' | 'sexl' | 'nxl'
-    color?: 'white' | 'secondary' | 'accent'
+    color?: 'primary' | 'white' | 'secondary' | 'accent'
     weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
     children?: ReactNode
 }
@@ -25,6 +25,7 @@ export default function Title({ text, size = 'large', color = 'white', weight = 
     }
 
     const colorClass = {
+        primary: 'text-primary',
         white: 'text-white',
         secondary: 'text-secondary',
         accent: 'text-accent',
