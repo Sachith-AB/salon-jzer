@@ -22,7 +22,7 @@ export default function Home() {
                 <MainLayout>
                     <Title text='Welcome to' size='sxl' weight={600}/>
                     <Title text='Salon JZER' size='sxl' color='secondary'/>
-                    <Title text='Jewel of your beauty' size='large' weight={500}/>
+                    <Title text='Jewel of your beauty...' size='large' weight={500}/>
                 </MainLayout>
             </div>
         </div>
