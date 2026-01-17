@@ -1,32 +1,69 @@
 import logo from './../assets/logo.jpeg'
 import { Link, useLocation } from 'react-router-dom'
 import MainLayout from './MainLayout'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useIsMobile from '../hooks/useIsMobile'
 import { MdMenu, MdClose } from 'react-icons/md'
 
 export default function CustomHeader() {
-    const navLinks = ['Home', 'About', 'Contact', 'Services'];
-    const location = useLocation();
+    const navLinks = ['Home', 'About', 'Hair Styles', 'Contact'];
     const [menuOpen, setMenuOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState('Home');
     const isMobile = useIsMobile();
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const sections = ['home', 'about']
+            const headerHeight = 100
+
+            for (const section of sections) {
+                const element = document.getElementById(section)
+                if (element) {
+                    const rect = element.getBoundingClientRect()
+                    if (rect.top <= headerHeight && rect.bottom >= headerHeight) {
+                        setActiveSection(section.charAt(0).toUpperCase() + section.slice(1))
+                        break
+                    }
+                }
+            }
+        }
+
+        window.addEventListener('scroll', handleScroll)
+        handleScroll()
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
+    const handleNavClick = (link: string) => {
+        setMenuOpen(false)
+        
+        if (link === 'About') {
+            const aboutSection = document.getElementById('about')
+            if (aboutSection) {
+                aboutSection.scrollIntoView({ behavior: 'smooth' })
+            }
+        } else if (link === 'Home') {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+    }
+
+    const isLinkActive = (link: string) => {
+        return activeSection === link
+    }
 
     const mobileViewMenuItem = () => {
         return (
             <nav className="flex flex-col gap-3">
                 {navLinks.map((link) => {
-                    const linkPath = `/${link.toLowerCase()}`
-                    const isActive = location.pathname === linkPath || (link === 'Home' && location.pathname ==='/')
+                    const active = isLinkActive(link)
                     
                     return (
-                        <Link
-                            key={link} 
-                            to={linkPath}
-                            onClick={() => setMenuOpen(false)}
-                            className={isActive ? 'text-secondary transition-colors' : 'text-accent hover:text-secondary transition-colors'}
+                        <button
+                            key={link}
+                            onClick={() => handleNavClick(link)}
+                            className={active ? 'text-secondary transition-all font-semibold text-left' : 'text-accent hover:text-white transition-all text-left'}
                         >
                             {link}
-                        </Link>
+                        </button>
                     )
                 })}
             </nav>
@@ -34,7 +71,7 @@ export default function CustomHeader() {
     }
     
     return (
-        <div className="w-full bg-primary text-white relative">
+        <div className="w-full bg-primary text-white fixed top-0 left-0 right-0 z-40 shadow-lg">
             <MainLayout>
                 <div className="flex items-center justify-between py-4">
                     {/* Left side - Logo */}
@@ -51,17 +88,16 @@ export default function CustomHeader() {
                         ) : (
                             <nav className="flex gap-6">
                                 {navLinks.map((link) => {
-                                    const linkPath = `/${link.toLowerCase()}`
-                                    const isActive = location.pathname === linkPath || (link === 'Home' && location.pathname ==='/')
+                                    const active = isLinkActive(link)
                                     
                                     return (
-                                        <Link
-                                            key={link} 
-                                            to={linkPath}
-                                            className={isActive ? 'text-secondary transition-colors' : 'text-accent hover:text-secondary transition-colors'}
+                                        <button
+                                            key={link}
+                                            onClick={() => handleNavClick(link)}
+                                            className={active ? 'text-secondary' : 'text-accent hover:text-white'}
                                         >
                                             {link}
-                                        </Link>
+                                        </button>
                                     )
                                 })}
                             </nav>
