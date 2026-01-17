@@ -1,7 +1,6 @@
 import MainLayout from '../components/MainLayout'
 import Title from '../components/Title'
 import logo from '../assets/logo.jpeg'
-import { Link } from 'react-router-dom'
 
 export default function AboutSection() {
     const description = "Welcome to Salon JZER, where beauty meets precision and care. Our salon is dedicated to providing an exceptional experience for every client, combining the latest techniques with a personalized approach. Whether you're looking for a fresh hairstyle, professional skincare, or complete grooming services, our team of skilled professionals ensures quality, comfort, and style at every visit. At Salon JZER, we believe in enhancing your natural beauty while delivering a relaxing and enjoyable experience. Stay tuned as we prepare to open our doors and introduce you to a new standard of salon excellence."
@@ -26,7 +25,6 @@ export default function AboutSection() {
                     </div>
                 </div>
             </MainLayout>
-            <Link to='/admin' className='text-white'>admin</Link>
         </div>
     )
 }

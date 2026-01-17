@@ -4,7 +4,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import CustomHeader from "./components/CustomHeader";
 import Home from './pages/Home';
 import usePageTitle from './hooks/usePageTitle';
-import Admin from './pages/Admin';
+import AdminUpload from './pages/admin/AdminUpload';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 export default function App() {
   usePageTitle()
@@ -14,7 +15,8 @@ export default function App() {
       <CustomHeader />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin-upload" element={<AdminUpload />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
       </Routes>
       <ToastContainer
         position="top-right"
