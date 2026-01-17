@@ -5,31 +5,26 @@ import Title from '../components/Title';
 import Button from '../components/Button';
 import { MdUploadFile } from 'react-icons/md';
 import { supabase } from '../supabaseClient';
+import useIsMobile from '../hooks/useIsMobile';
 
 export default function Admin() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
-    const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ 
-        type: null, 
-        message: '' 
-    });
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const isMobile = useIsMobile();
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && file.type.startsWith('video/')) {
             setSelectedFile(file);
-            setUploadStatus({ type: null, message: '' });
         } else {
-            setUploadStatus({ type: 'error', message: 'Please select a valid video file' });
             setSelectedFile(null);
         }
     };
 
     const handleUpload = async () => {
         if (!selectedFile) {
-            setUploadStatus({ type: 'error', message: 'No file selected' });
             return;
         }
 
@@ -56,22 +51,19 @@ export default function Admin() {
             if (error) {
                 throw error;
             }
-
-            setUploadStatus({ 
-                type: 'success', 
-                message: `Video "${selectedFile.name}" successfully uploaded!` 
+            toast.success('video uploaded', {
+                className: isMobile ? 'text-xs' : 'text-sm',
             });
-            toast.success('video uploaded');
             
             setTimeout(() => {
                 setSelectedFile(null);
-                setUploadStatus({ type: null, message: '' });
                 setUploadProgress(0);
             }, 2000);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-            setUploadStatus({ type: 'error', message: errorMessage });
-            toast.error(errorMessage);
+            toast.error(errorMessage, {
+                className: isMobile ? 'text-xs' : 'text-sm',
+            });
             console.error('Upload error:', error);
         } finally {
             setIsUploading(false);
@@ -81,7 +73,6 @@ export default function Admin() {
 
     const handleRemoveFile = () => {
         setSelectedFile(null);
-        setUploadStatus({ type: null, message: '' });
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -95,23 +86,31 @@ export default function Admin() {
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
+    const truncateFileName = (name: string, maxLength: number = 20) => {
+        if (name.length <= maxLength) return name;
+        const extension = name.split('.').pop();
+        const nameWithoutExt = name.replace(`.${extension}`, '');
+        const truncatedName = nameWithoutExt.substring(0, maxLength - extension!.length - 4);
+        return `${truncatedName}...${extension}`;
+    };
+
     return (
-        <div id='admin' className="min-h-screen bg-gray-50 pt-24">
+        <div id='admin' className={`min-h-screen bg-gray-50 ${isMobile ? 'pt-16' : 'pt-24'}`}>
             <MainLayout>
-                <div className="max-w-2xl mx-auto py-8">
+                <div className={`max-w-2xl mx-auto ${isMobile ? 'py-4 px-4' : 'py-8'}`}>
                     {/* Header */}
-                    <div className="mb-8">
-                        <Title text="Admin Panel" size="fvxl" color="accent" />
-                        <Title text="Manage videos" size="base" color="accent" weight={400} />
+                    <div className={isMobile ? 'mb-4' : 'mb-8'}>
+                        <Title text="Admin Panel" size={isMobile ? 'dxl' : 'fvxl'} color="accent"  />
+                        <Title text="Manage videos" size={isMobile ? 'sm' : 'base'} color="accent" weight={400}  />
                     </div>
 
                     {/* Upload Section */}
-                    <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-                        <Title text="Upload Video" size="dxl" color="primary" />
+                    <div className={`bg-white rounded-lg shadow-lg ${isMobile ? 'p-4' : 'p-8'} mb-8`}>
+                        <Title text="Upload Video" size={isMobile ? 'xl' : 'dxl'} color="primary"  />
                         
                         {/* File Input */}
-                        <div className="mb-6 mt-4">
-                            <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer mt-3">
+                        <div className={isMobile ? 'mb-4 mt-2' : 'mb-6 mt-4'}>
+                            <div className={`relative border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-primary transition-colors cursor-pointer mt-3 ${isMobile ? 'p-4' : 'p-8'}`}>
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -119,20 +118,20 @@ export default function Admin() {
                                     onChange={handleFileSelect}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 />
-                                <MdUploadFile size={48} className="mx-auto text-gray-400 mb-3" />
+                                <MdUploadFile size={isMobile ? 32 : 48} className="mx-auto text-gray-400 mb-2" />
                                 {selectedFile ? (
-                                    <div>
-                                        <Title text={selectedFile.name} size="sm" color="primary" weight={600} />
-                                        <Title text={`Size: ${formatFileSize(selectedFile.size)}`} size="xs" color="primary" weight={400} />
+                                    <div className=''>
+                                        <Title text={truncateFileName(selectedFile.name, isMobile ? 20 : 30)} size={isMobile ? 'xs' : 'sm'} color="primary" weight={600} />
+                                        <Title text={`Size: ${formatFileSize(selectedFile.size)}`} size={isMobile ? 'xs' : 'xs'} color="primary" weight={400} />
                                     </div>
                                 ) : (
                                     <div>
-                                        <Title text="Drag and drop or click to select" size="sm" color="primary" weight={600} />
-                                        <Title text="Max 500MB (MP4, WebM, Ogg, etc.)" size="xs" color="primary" weight={400} />
+                                        <Title text="Drag and drop or click to select" size={isMobile ? 'xs' : 'sm'} color="primary" weight={600} />
+                                        <Title text="Max 500MB (MP4, WebM, Ogg, etc.)" size={isMobile ? 'xs' : 'xs'} color="primary" weight={400} />
                                     </div>
                                 )}
                             </div>
-                            <div className='h-12 mt-4'>
+                            <div className={isMobile ? 'h-8 mt-2' : 'h-12 mt-4'}>
                                 {selectedFile && !isUploading && (
                                     <div className="">
                                         <Button
@@ -146,15 +145,15 @@ export default function Admin() {
                             </div>
                         </div>
 
-                        <div className='h-24'>
+                        <div className={isMobile ? 'h-20' : 'h-24'}>
                             {/* Upload Progress */}
                             {isUploading && (
-                                <div className="mb-3 flex flex-col justify-center">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <Title text="Upload Progress" size="sm" color="primary" weight={500} />
-                                        <Title text={`${uploadProgress}%`} size="sm" color="primary" weight={600} />
+                                <div className={`flex flex-col justify-center ${isMobile ? 'mb-2' : 'mb-3'}`}>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <Title text="Upload Progress" size={isMobile ? 'xs' : 'sm'} color="primary" weight={500}  />
+                                        <Title text={`${uploadProgress}%`} size={isMobile ? 'xs' : 'sm'} color="primary" weight={600}  />
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                    <div className={`w-full bg-gray-200 rounded-full overflow-hidden ${isMobile ? 'h-2' : 'h-3'}`}>
                                         <div 
                                             className="bg-primary h-full transition-all duration-300 ease-out"
                                             style={{ width: `${uploadProgress}%` }}
@@ -165,7 +164,7 @@ export default function Admin() {
                         </div>
 
                         {/* Upload Button */}
-                        <div className="mt-6">
+                        <div className={isMobile ? 'mt-3' : 'mt-6'}>
                             <Button
                                 text={isUploading ? "Uploading..." : "Upload Video"}
                                 onClick={handleUpload}
