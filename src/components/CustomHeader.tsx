@@ -5,61 +5,53 @@ import useIsMobile from '../hooks/useIsMobile'
 import { MdMenu, MdClose } from 'react-icons/md'
 
 export default function CustomHeader() {
-    const navLinks = ['Home', 'About', 'Hair Styles', 'Contact'];
+    const navLinks = ['Home', 'About', 'Contact', 'Services'];
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState('Home');
     const isMobile = useIsMobile();
 
     useEffect(() => {
         const handleScroll = () => {
-            const sections = ['home', 'about']
-            const headerHeight = 100
+            const sections = navLinks.map(link => ({
+                name: link,
+                element: document.getElementById(link.toLowerCase())
+            })).filter(s => s.element !== null);
 
+            let currentSection = 'Home';
+            
             for (const section of sections) {
-                const element = document.getElementById(section)
-                if (element) {
-                    const rect = element.getBoundingClientRect()
-                    if (rect.top <= headerHeight && rect.bottom >= headerHeight) {
-                        setActiveSection(section.charAt(0).toUpperCase() + section.slice(1))
-                        break
-                    }
+                const rect = section.element!.getBoundingClientRect();
+                if (rect.top <= window.innerHeight / 2) {
+                    currentSection = section.name;
                 }
             }
+            
+            setActiveSection(currentSection);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToSection = (sectionName: string) => {
+        const element = document.getElementById(sectionName.toLowerCase());
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
         }
-
-        window.addEventListener('scroll', handleScroll)
-        handleScroll()
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
-
-    const handleNavClick = (link: string) => {
-        setMenuOpen(false)
-        
-        if (link === 'About') {
-            const aboutSection = document.getElementById('about')
-            if (aboutSection) {
-                aboutSection.scrollIntoView({ behavior: 'smooth' })
-            }
-        } else if (link === 'Home') {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-        }
-    }
-
-    const isLinkActive = (link: string) => {
-        return activeSection === link
-    }
+        setMenuOpen(false);
+    };
 
     const mobileViewMenuItem = () => {
         return (
             <nav className="flex flex-col gap-3">
                 {navLinks.map((link) => {
-                    const active = isLinkActive(link)
+                    const isActive = activeSection === link;
                     
                     return (
                         <button
-                            key={link}
-                            onClick={() => handleNavClick(link)}
-                            className={active ? 'text-secondary transition-all font-semibold text-left' : 'text-accent hover:text-white transition-all text-left'}
+                            key={link} 
+                            onClick={() => scrollToSection(link)}
+                            className={isActive ? 'text-secondary transition-colors text-left' : 'text-accent hover:text-secondary transition-colors text-left'}
                         >
                             {link}
                         </button>
@@ -70,7 +62,7 @@ export default function CustomHeader() {
     }
     
     return (
-        <div className="w-full bg-primary text-white fixed top-0 left-0 right-0 z-40 shadow-lg">
+        <div className="w-full bg-primary text-white fixed z-50 top-0">
             <MainLayout>
                 <div className="flex items-center justify-between py-4">
                     {/* Left side - Logo */}
@@ -87,13 +79,13 @@ export default function CustomHeader() {
                         ) : (
                             <nav className="flex gap-6">
                                 {navLinks.map((link) => {
-                                    const active = isLinkActive(link)
+                                    const isActive = activeSection === link;
                                     
                                     return (
                                         <button
-                                            key={link}
-                                            onClick={() => handleNavClick(link)}
-                                            className={active ? 'text-secondary' : 'text-accent hover:text-white'}
+                                            key={link} 
+                                            onClick={() => scrollToSection(link)}
+                                            className={isActive ? 'text-secondary transition-colors' : 'text-accent hover:text-secondary transition-colors'}
                                         >
                                             {link}
                                         </button>
