@@ -1,5 +1,4 @@
 import logo from './../assets/logo.jpeg'
-import { Link, useLocation } from 'react-router-dom'
 import MainLayout from './MainLayout'
 import { useState, useEffect } from 'react'
 import useIsMobile from '../hooks/useIsMobile'
