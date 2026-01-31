@@ -2,6 +2,7 @@ import logoVideo from '../assets/videos/logo-video.mp4'
 import MainLayout from '../components/MainLayout'
 import Title from '../components/Title'
 import AboutSection from './AboutSection'
+import StorySection from './StorySection'
 
 export default function Home() {
     return (
@@ -33,6 +34,11 @@ export default function Home() {
             {/* About Section */}
             <div className='mt-20'>
                 <AboutSection />
+            </div>
+
+            {/* About Section */}
+            <div className='mt-20'>
+                <StorySection />
             </div>
         </div>
     )

@@ -1,73 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { supabase } from '../../supabaseClient'
+import { useFetchVideos } from '../../helper/fetchVideo'
 import Title from '../../components/Title'
 import Button from '../../components/Button'
 import LoadingState from './components/LoadingState'
 import EmptyState from './components/EmptyState'
-import { supabase } from '../../supabaseClient'
 import VideoCard from './components/VideoCard'
 import ConfirmationModal from '../../components/ConfirmationModal'
-
-interface Video {
-    id: string
-    name: string
-    title: string
-    video_url: string
-    thumbnail_url?: string
-    created_at: string
-}
+import type { Video } from '../../interfaces/Video'
 
 export default function AdminDashboard() {
     const navigate = useNavigate()
-    const [videos, setVideos] = useState<Video[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+    const { videos, loading, error, refetch } = useFetchVideos()
     const [deleteModalOpen, setDeleteModalOpen] = useState(false)
     const [videoToDelete, setVideoToDelete] = useState<Video | null>(null)
-    
-    useEffect(() => {
-        fetchVideos()
-    }, [])
-
-    const fetchVideos = async () => {
-        try {
-            setLoading(true)
-            setError(null)
-
-            const { data, error: fetchError } = await supabase
-                .storage
-                .from('videos')
-                .list()
-
-            if (fetchError) throw fetchError
-
-            const videoList = (data || [])
-                .filter(file => !file.name.startsWith('.'))
-                .map((file) => {
-                    const publicUrl = supabase.storage
-                        .from('videos')
-                        .getPublicUrl(file.name).data.publicUrl
-
-                    return {
-                        id: file.id,
-                        name: file.name,
-                        title: file.name.replace(/\.[^/.]+$/, ''),
-                        video_url: publicUrl,
-                        thumbnail_url: undefined,
-                        created_at: file.created_at || new Date().toISOString()
-                    }
-                })
-                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-
-            setVideos(videoList)
-        } catch (err) {
-            console.error('Error fetching videos:', err)
-            setError(err instanceof Error ? err.message : 'Failed to fetch videos from storage')
-        } finally {
-            setLoading(false)
-        }
-    }
     const handleDelete = async (id: string) => {
         const video = videos.find(v => v.id === id)
         if (video) {
@@ -87,10 +35,10 @@ export default function AdminDashboard() {
 
             if (deleteError) throw deleteError
 
-            setVideos(videos.filter(v => v.id !== videoToDelete.id))
             setDeleteModalOpen(false)
             setVideoToDelete(null)
             toast.success('Video deleted successfully!')
+            refetch()
         } catch (err) {
             console.error('Error deleting video:', err)
             toast.error('Failed to delete video from storage')
@@ -135,7 +83,7 @@ export default function AdminDashboard() {
                             text="Retry"
                             size="sm"
                             variant="accent"
-                            onClick={fetchVideos}
+                            onClick={refetch}
                             className="mt-4"
                         />
                     </div>
