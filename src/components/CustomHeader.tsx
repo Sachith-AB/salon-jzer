@@ -1,14 +1,15 @@
 import logo from './../assets/logo.jpeg'
 import MainLayout from './MainLayout'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import useIsMobile from '../hooks/useIsMobile'
 import { MdMenu, MdClose } from 'react-icons/md'
 
 export default function CustomHeader() {
-    const navLinks = ['Home', 'About', 'Contact', 'Services'];
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState('Home');
     const isMobile = useIsMobile();
+
+    const navLinks = useMemo(() => ['Home', 'About', 'Contact', 'Services'], []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -31,7 +32,7 @@ export default function CustomHeader() {
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [navLinks]);
 
     const scrollToSection = (sectionName: string) => {
         const element = document.getElementById(sectionName.toLowerCase());

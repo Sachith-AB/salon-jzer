@@ -13,11 +13,13 @@ export default function App() {
   return (
     <>
       <CustomHeader />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/admin-upload" element={<AdminUpload />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-      </Routes>
+      <div className="pt-20">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/admin-upload" element={<AdminUpload />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        </Routes>
+      </div>
       <ToastContainer
         position="top-right"
         autoClose={3000}

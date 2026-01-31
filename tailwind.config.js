@@ -11,6 +11,7 @@ export default {
             primary: '#000000',    // Black
             secondary: '#FFD700',  // Gold
             accent: '#E8E8E8',     // Brighter Silver
+            danger: '#E74C3C',     // Red-Pink
         },
     },
     plugins: [],

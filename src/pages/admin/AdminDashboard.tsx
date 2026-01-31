@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import Title from '../../components/Title'
 import Button from '../../components/Button'
 import LoadingState from './components/LoadingState'
 import EmptyState from './components/EmptyState'
 import { supabase } from '../../supabaseClient'
 import VideoCard from './components/VideoCard'
+import ConfirmationModal from '../../components/ConfirmationModal'
 
 interface Video {
     id: string
@@ -16,9 +19,12 @@ interface Video {
 }
 
 export default function AdminDashboard() {
+    const navigate = useNavigate()
     const [videos, setVideos] = useState<Video[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [videoToDelete, setVideoToDelete] = useState<Video | null>(null)
     
     useEffect(() => {
         fetchVideos()
@@ -64,35 +70,36 @@ export default function AdminDashboard() {
     }
     const handleDelete = async (id: string) => {
         const video = videos.find(v => v.id === id)
-        if (!video) return
-        
-        if (!window.confirm(`Delete "${video.title}"?`)) return
+        if (video) {
+            setVideoToDelete(video)
+            setDeleteModalOpen(true)
+        }
+    }
+
+    const confirmDelete = async () => {
+        if (!videoToDelete) return
 
         try {
             const { error: deleteError } = await supabase
                 .storage
                 .from('videos')
-                .remove([video.name])
+                .remove([videoToDelete.name])
 
             if (deleteError) throw deleteError
 
-            setVideos(videos.filter(v => v.id !== id))
+            setVideos(videos.filter(v => v.id !== videoToDelete.id))
+            setDeleteModalOpen(false)
+            setVideoToDelete(null)
+            toast.success('Video deleted successfully!')
         } catch (err) {
             console.error('Error deleting video:', err)
-            alert('Failed to delete video from storage')
+            toast.error('Failed to delete video from storage')
         }
     }
 
-    const handleEdit = (id: string) => {
-        // Navigate to edit page or open modal
-        console.log('Edit video:', id)
-        // You can implement navigation here
-    }
-
-    const handleView = (id: string) => {
-        // Navigate to view page or open modal
-        console.log('View video:', id)
-        // You can implement navigation here
+    const cancelDelete = () => {
+        setDeleteModalOpen(false)
+        setVideoToDelete(null)
     }
 
     return (
@@ -115,7 +122,7 @@ export default function AdminDashboard() {
                         text="Upload New Video"
                         variant="primary"
                         size="lg"
-                        onClick={() => console.log('Navigate to upload')}
+                        onClick={() => navigate("/admin-upload")}
                     />
                 </div>
 
@@ -142,7 +149,7 @@ export default function AdminDashboard() {
                         title="No videos yet"
                         description="Start by uploading your first video to get started."
                         actionText="Upload Video"
-                        onAction={() => console.log('Navigate to upload')}
+                        onAction={() => navigate("/admin-upload")}
                     />
                 ) : (
                     <>
@@ -162,15 +169,18 @@ export default function AdminDashboard() {
                                     title={video.title}
                                     videoUrl={video.video_url}
                                     thumbnailUrl={video.thumbnail_url}
-                                    onEdit={handleEdit}
                                     onDelete={handleDelete}
-                                    onView={handleView}
                                 />
                             ))}
                         </div>
                     </>
                 )}
             </div>
+            {
+                deleteModalOpen && (
+                    <ConfirmationModal onConfirm={confirmDelete} onCancel={cancelDelete}/>
+                )
+            }
         </div>
     )
 }

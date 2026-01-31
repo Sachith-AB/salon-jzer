@@ -29,11 +29,11 @@ export default function Button({
         primary: 'bg-primary text-white hover:bg-opacity-90',
         secondary: 'bg-secondary text-white hover:bg-opacity-90',
         accent: 'bg-accent text-primary hover:bg-opacity-90',
-        danger: 'bg-red-500 text-white hover:bg-red-600',
+        danger: 'bg-danger text-white hover:bg-opacity-90',
     }
 
-    const baseClass = 'rounded-lg font-semibold transition-all duration-200 bg-primary text-white'
-    const disabledClass = disabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60' : 'cursor-pointer'
+    const baseClass = 'rounded-lg font-semibold transition-all duration-200'
+    const disabledClass = disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
 
     const finalClass = disabled 
         ? `${baseClass} ${sizeClass[size]} ${disabledClass} ${className}`
