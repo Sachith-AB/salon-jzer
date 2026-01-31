@@ -37,7 +37,7 @@ export default function Home() {
             </div>
 
             {/* About Section */}
-            <div className='mt-20'>
+            <div className='mt-20 w-full'>
                 <StorySection />
             </div>
         </div>
